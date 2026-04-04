@@ -4,5 +4,6 @@ import "fmt"
 
 func main() {
 	fmt.Println("Day 3 of learning go")
-	practice()
+	// practice()
+	BookingSystem()
 }
