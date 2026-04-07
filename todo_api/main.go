@@ -64,8 +64,36 @@ func todoCreateHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 func todoUpdateHandler(w http.ResponseWriter, r *http.Request) {
-
+	vars := mux.Vars(r)
+	id := vars["id"]
+	var data model.TodoRequest
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		errorHandler(w)
+		return
+	}
+	for i, value := range globalTodos {
+		if value.Id == id {
+			globalTodos[i].Title = data.Title
+			response := model.CreationSuccess{
+				Status:  true,
+				Message: "Todo successfully updated",
+				Data:    globalTodos,
+			}
+			jsonResponse, err := json.Marshal(response)
+			if err != nil {
+				errorHandler(w)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write(jsonResponse)
+			return
+		}
+	}
+	http.Error(w, "Todo not found", http.StatusNotFound)
 }
+
 func todoDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -110,7 +138,7 @@ func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/health", healthHandler).Methods("GET")
 	r.HandleFunc("/todo/create", todoCreateHandler).Methods("POST")
-	r.HandleFunc("/todo/update", todoUpdateHandler).Methods("PUT", "PATCH")
+	r.HandleFunc("/todo/update/{id}", todoUpdateHandler).Methods("PUT", "PATCH")
 	r.HandleFunc("/todo/delete/{id}", todoDeleteHandler).Methods("DELETE")
 	r.HandleFunc("/todo/get", todoGetHandler).Methods("GET")
 
